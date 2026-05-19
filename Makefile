@@ -15,8 +15,11 @@ help:
 	@echo "  make stan       run larastan"
 	@echo "  make lint       run pint --test"
 	@echo "  make format     run pint"
-	@echo "  make mobile-get flutter pub get"
-	@echo "  make mobile-test flutter test"
+	@echo "  make mobile-get   npm ci in mobile/"
+	@echo "  make mobile-test  jest"
+	@echo "  make mobile-typecheck  tsc --noEmit"
+	@echo "  make mobile-lint  eslint ."
+	@echo "  make mobile-start expo start"
 	@echo "  make ci         run the full CI suite locally"
 
 up:
@@ -68,9 +71,18 @@ format:
 	docker compose exec -T app vendor/bin/pint
 
 mobile-get:
-	cd mobile && flutter pub get
+	cd mobile && npm ci
 
 mobile-test:
-	cd mobile && flutter test
+	cd mobile && npm test
 
-ci: lint stan test mobile-test
+mobile-typecheck:
+	cd mobile && npx tsc --noEmit
+
+mobile-lint:
+	cd mobile && npx eslint .
+
+mobile-start:
+	cd mobile && npx expo start
+
+ci: lint stan test mobile-typecheck mobile-lint mobile-test

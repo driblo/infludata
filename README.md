@@ -1,8 +1,9 @@
 # infludata
 
-Social-stats analytics platform. Laravel 13 backend + Flutter frontend that
-fetch, store, and visualize statistics from YouTube, Instagram, TikTok,
-Twitter/X, and Facebook Pages.
+Social-stats analytics platform. Laravel 13 backend + React Native (Expo)
+client that fetch, store, and visualize statistics from YouTube, Instagram,
+TikTok, Twitter/X, and Facebook Pages. The mobile codebase targets iOS,
+Android, and web via `react-native-web`.
 
 Two account models coexist:
 
@@ -22,8 +23,8 @@ Phyllo can't reach or where direct calls are cheaper.
 | Backend  | Laravel 13, PHP 8.3, Sanctum, Horizon                     |
 | Storage  | PostgreSQL 16 + TimescaleDB (see `docs/adr/0001-...`)     |
 | Queue    | Redis (Horizon dashboard at `/horizon`)                   |
-| Mobile   | Flutter (iOS + Android + Web), Riverpod 3, fl_chart       |
-| Observ.  | Sentry, structured JSON logs                              |
+| Mobile   | React Native + Expo SDK 52 (iOS + Android + Web), Expo Router, TanStack Query, Zustand, react-hook-form + zod, Recharts/victory-native |
+| Observ.  | Sentry (backend + RN), structured JSON logs               |
 | Dev      | docker-compose, Makefile                                  |
 
 ## Quick start
@@ -45,12 +46,14 @@ On success:
 
 ```sh
 cd mobile
-flutter pub get
-flutter run
+cp .env.example .env       # set EXPO_PUBLIC_API_BASE_URL
+npm install
+npx expo start             # press i (iOS), a (Android), w (web)
 ```
 
-The app expects the API at `http://localhost:8000` in dev. Override with
-`--dart-define=API_BASE_URL=https://...`.
+Defaults to `http://localhost:8000`. Override via `EXPO_PUBLIC_API_BASE_URL`.
+Native modules (Phyllo Connect) require an Expo dev client: `npx expo prebuild`
+then `npx expo run:ios` / `run:android`.
 
 ## Layout
 
@@ -62,9 +65,13 @@ backend/        Laravel 13 API
     Services/Phyllo/        Phyllo HTTP + SDK token + webhook verifier
     Services/Platforms/     direct platform clients (YouTube, IG, X, FB, TikTok)
   database/migrations/      core schema + TimescaleDB hypertables
-mobile/         Flutter app
-  lib/core/                 api client, router, env
-  lib/features/             dashboard, auth, connections, creators, content, alerts
+mobile/         Expo + React Native app (iOS + Android + Web)
+  app/                      Expo Router file-based routes (auth + app groups)
+  src/api/                  axios client + endpoint modules + types
+  src/auth/                 Zustand authStore + bootstrap hook
+  src/features/             auth, connections, creators, dashboard, alerts, settings
+  src/ui/                   Screen, Button, TextField, Avatar, …
+  __tests__/                Jest + @testing-library/react-native
 docker/         Dockerfiles + nginx config used by docker-compose
 docs/adr/       Architecture Decision Records
 .github/workflows/ci.yml    backend + mobile CI
@@ -79,8 +86,9 @@ full plan. Milestone status:
 - [x] **M1** Auth + Phyllo own-account for YouTube & Instagram
 - [x] **M2** Public-creator lookup + ingestion (YT, IG)
 - [x] **M3** TikTok, X, Facebook Pages
-- [x] **M4** Flutter analytics UI (dashboard, content, charts)
+- [x] **M4** Analytics UI (dashboard, content, charts)
 - [x] **M5** Alerts, exports, admin, GDPR — code-complete
+- [x] **RN-port** Mobile rewritten from Flutter → React Native + Expo (iOS, Android, web)
 
 > **Operational follow-ups for beta launch** (not code work):
 >
