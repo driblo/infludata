@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'creators_controller.dart';
@@ -67,6 +68,12 @@ class _CreatorDetailScreenState extends ConsumerState<CreatorDetailScreen> {
                   error: (e, _) => Center(child: Text('Error: $e')),
                   data: (points) => _FollowersChart(points: points),
                 ),
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.list_alt),
+                label: const Text('View content'),
+                onPressed: () => context.push('/creators/${widget.creatorId}/content'),
               ),
             ],
           ),

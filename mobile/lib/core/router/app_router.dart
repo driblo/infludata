@@ -6,6 +6,7 @@ import '../../features/auth/auth_controller.dart';
 import '../../features/auth/auth_login_screen.dart';
 import '../../features/auth/auth_register_screen.dart';
 import '../../features/connections/my_accounts_screen.dart';
+import '../../features/creators/content_list_screen.dart';
 import '../../features/creators/creator_detail_screen.dart';
 import '../../features/creators/tracked_creators_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
@@ -55,6 +56,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/creators/:id',
         name: 'creator-detail',
         builder: (_, state) => CreatorDetailScreen(
+          creatorId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/creators/:id/content',
+        name: 'creator-content',
+        builder: (_, state) => ContentListScreen(
           creatorId: int.parse(state.pathParameters['id']!),
         ),
       ),

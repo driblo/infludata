@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\AudienceController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\ConnectionsController;
 use App\Http\Controllers\Api\CostController;
 use App\Http\Controllers\Api\CreatorsController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\Webhooks\PhylloWebhookController;
 use App\Http\Middleware\EnsureNetworkEnabled;
@@ -38,4 +40,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/creators/{creator}/content', [CreatorsController::class, 'content'])->name('api.creators.content');
 
     Route::get('/cost', [CostController::class, 'index'])->name('api.cost.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('api.dashboard.index');
+    Route::get('/audience/{account}', [AudienceController::class, 'show'])->name('api.audience.show');
 });
