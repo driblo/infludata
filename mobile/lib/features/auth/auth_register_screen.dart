@@ -4,20 +4,22 @@ import 'package:go_router/go_router.dart';
 
 import 'auth_controller.dart';
 
-class AuthLoginScreen extends ConsumerStatefulWidget {
-  const AuthLoginScreen({super.key});
+class AuthRegisterScreen extends ConsumerStatefulWidget {
+  const AuthRegisterScreen({super.key});
 
   @override
-  ConsumerState<AuthLoginScreen> createState() => _AuthLoginScreenState();
+  ConsumerState<AuthRegisterScreen> createState() => _AuthRegisterScreenState();
 }
 
-class _AuthLoginScreenState extends ConsumerState<AuthLoginScreen> {
+class _AuthRegisterScreenState extends ConsumerState<AuthRegisterScreen> {
+  final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
+    _name.dispose();
     _email.dispose();
     _password.dispose();
     super.dispose();
@@ -25,7 +27,8 @@ class _AuthLoginScreenState extends ConsumerState<AuthLoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref.read(authControllerProvider.notifier).login(
+    await ref.read(authControllerProvider.notifier).register(
+          name: _name.text.trim(),
           email: _email.text.trim(),
           password: _password.text,
         );
@@ -37,7 +40,7 @@ class _AuthLoginScreenState extends ConsumerState<AuthLoginScreen> {
       },
       error: (e, _) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e')),
+          SnackBar(content: Text('Registration failed: $e')),
         );
       },
     );
@@ -45,11 +48,9 @@ class _AuthLoginScreenState extends ConsumerState<AuthLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authControllerProvider);
-    final loading = auth.isLoading;
-
+    final loading = ref.watch(authControllerProvider).isLoading;
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
+      appBar: AppBar(title: const Text('Create account')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
@@ -61,6 +62,13 @@ class _AuthLoginScreenState extends ConsumerState<AuthLoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  TextFormField(
+                    controller: _name,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Name required' : null,
+                  ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _email,
                     decoration: const InputDecoration(labelText: 'Email'),
@@ -84,11 +92,11 @@ class _AuthLoginScreenState extends ConsumerState<AuthLoginScreen> {
                             width: 18, height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Sign in'),
+                        : const Text('Create account'),
                   ),
                   TextButton(
-                    onPressed: loading ? null : () => context.go('/register'),
-                    child: const Text('Create an account'),
+                    onPressed: loading ? null : () => context.go('/login'),
+                    child: const Text('Already have an account? Sign in'),
                   ),
                 ],
               ),
