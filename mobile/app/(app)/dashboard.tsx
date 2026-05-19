@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Appbar, Card, Chip, IconButton, Text, useTheme } from 'react-native-paper';
 
 import { costApi } from '@/api/endpoints/cost';
 import { dashboardApi } from '@/api/endpoints/dashboard';
@@ -11,10 +12,10 @@ import { secureStore, TOKEN_KEY } from '@/storage/secureStore';
 import { EmptyState } from '@/ui/EmptyState';
 import { ErrorState } from '@/ui/ErrorState';
 import { LoadingState } from '@/ui/LoadingState';
-import { Screen } from '@/ui/Screen';
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const setSignedOut = useAuthStore((s) => s.setSignedOut);
   const user = useAuthStore((s) => s.user);
 
@@ -28,24 +29,17 @@ export default function DashboardScreen() {
   };
 
   return (
-    <Screen>
-      <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.h1}>infludata</Text>
-          <Pressable onPress={logout} accessibilityRole="button">
-            <Text style={styles.link}>Sign out</Text>
-          </Pressable>
-        </View>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <Appbar.Header>
+        <Appbar.Content title="infludata" subtitle={user?.email ?? undefined} />
+        <Appbar.Action icon="account-multiple" onPress={() => router.push('/creators')} accessibilityLabel="Creators" />
+        <Appbar.Action icon="link-variant" onPress={() => router.push('/accounts')} accessibilityLabel="Accounts" />
+        <Appbar.Action icon="bell-outline" onPress={() => router.push('/alerts')} accessibilityLabel="Alerts" />
+        <Appbar.Action icon="cog-outline" onPress={() => router.push('/settings')} accessibilityLabel="Settings" />
+        <Appbar.Action icon="logout" onPress={logout} accessibilityLabel="Sign out" />
+      </Appbar.Header>
 
-        {user ? <Text style={styles.user}>{user.email}</Text> : null}
-
-        <View style={styles.nav}>
-          <NavItem label="Creators" onPress={() => router.push('/creators')} />
-          <NavItem label="Accounts" onPress={() => router.push('/accounts')} />
-          <NavItem label="Alerts" onPress={() => router.push('/alerts')} />
-          <NavItem label="Settings" onPress={() => router.push('/settings')} />
-        </View>
-
+      <ScrollView contentContainerStyle={styles.body}>
         {data.isLoading ? (
           <LoadingState />
         ) : data.isError ? (
@@ -58,90 +52,77 @@ export default function DashboardScreen() {
               <KpiTile label="Tracked" value={`${data.data.totals.tracked_count}`} />
               <KpiTile label="Total followers" value={compactNumber(data.data.totals.total_followers)} />
             </View>
-            <Text style={styles.h2}>Top movers (7d)</Text>
+
+            <Text variant="titleMedium" style={styles.h2}>
+              Top movers (7d)
+            </Text>
+
             {data.data.top_movers.length === 0 ? (
               <EmptyState title="No data yet" hint="Add creators and wait for the next sync." />
             ) : (
               data.data.top_movers.map((m) => (
-                <Pressable
-                  key={m.creator_profile_id}
-                  onPress={() => router.push(`/creators/${m.creator_profile_id}`)}
-                  style={styles.mover}
-                >
-                  <Text style={styles.moverTitle}>Creator #{m.creator_profile_id}</Text>
-                  <Text style={styles.moverBody}>{compactNumber(m.followers)} followers</Text>
-                  <Text
-                    style={[styles.delta, { color: m.delta_7d >= 0 ? '#22C55E' : '#D62F4E' }]}
-                  >
-                    {m.delta_7d >= 0 ? '+' : ''}
-                    {compactNumber(m.delta_7d)}
-                  </Text>
-                </Pressable>
+                <Card key={m.creator_profile_id} mode="contained" style={styles.mover} onPress={() => router.push(`/creators/${m.creator_profile_id}`)}>
+                  <Card.Title
+                    title={`Creator #${m.creator_profile_id}`}
+                    subtitle={`${compactNumber(m.followers)} followers`}
+                    right={() => (
+                      <Chip
+                        compact
+                        style={[
+                          styles.deltaChip,
+                          { backgroundColor: m.delta_7d >= 0 ? '#103D2A' : '#3B1421' },
+                        ]}
+                        textStyle={{ color: m.delta_7d >= 0 ? '#22C55E' : '#FF6B83', fontWeight: '700' }}
+                      >
+                        {`${m.delta_7d >= 0 ? '+' : ''}${compactNumber(m.delta_7d)}`}
+                      </Chip>
+                    )}
+                  />
+                </Card>
               ))
             )}
           </View>
         )}
 
         {cost.data ? (
-          <View style={styles.cost}>
-            <Text style={styles.h3}>X API spend today</Text>
-            <Text style={styles.body}>
-              {cost.data.kill_switch
-                ? 'Kill switch active — X disabled'
-                : `$${cost.data.spent_today_usd.toFixed(3)} spent · $${cost.data.remaining_today_usd.toFixed(3)} remaining`}
-            </Text>
-          </View>
+          <Card mode="contained" style={styles.costCard}>
+            <Card.Title
+              title="X API spend today"
+              subtitle={
+                cost.data.kill_switch
+                  ? 'Kill switch active — X disabled'
+                  : `$${cost.data.spent_today_usd.toFixed(3)} spent · $${cost.data.remaining_today_usd.toFixed(3)} remaining`
+              }
+              left={(props) => <IconButton {...props} icon="cash" onPress={undefined} />}
+            />
+          </Card>
         ) : null}
       </ScrollView>
-    </Screen>
-  );
-}
-
-function NavItem({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={styles.navItem} accessibilityRole="button">
-      <Text style={styles.navLabel}>{label}</Text>
-    </Pressable>
+    </View>
   );
 }
 
 function KpiTile({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.tile}>
-      <Text style={styles.tileLabel}>{label}</Text>
-      <Text style={styles.tileValue}>{value}</Text>
-    </View>
+    <Card mode="contained" style={styles.tile}>
+      <Card.Content>
+        <Text variant="labelMedium" style={{ opacity: 0.7 }}>
+          {label}
+        </Text>
+        <Text variant="headlineSmall" style={{ marginTop: 4 }}>
+          {value}
+        </Text>
+      </Card.Content>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  h1: { color: '#fff', fontSize: 22, fontWeight: '700' },
-  link: { color: '#7B61FF', fontWeight: '600' },
-  user: { color: '#C8CDE8', marginBottom: 8 },
-  nav: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginVertical: 12 },
-  navItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: '#1A1D40',
-  },
-  navLabel: { color: '#fff' },
-  tiles: { flexDirection: 'row', gap: 12, marginVertical: 12 },
-  tile: { flex: 1, padding: 16, backgroundColor: '#1A1D40', borderRadius: 12 },
-  tileLabel: { color: '#7C82A1', fontSize: 12 },
-  tileValue: { color: '#fff', fontSize: 22, fontWeight: '700', marginTop: 4 },
-  h2: { color: '#fff', fontWeight: '700', fontSize: 16, marginTop: 16, marginBottom: 8 },
-  h3: { color: '#fff', fontWeight: '700', marginBottom: 4 },
-  mover: {
-    padding: 12,
-    backgroundColor: '#1A1D40',
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  moverTitle: { color: '#fff', fontWeight: '600' },
-  moverBody: { color: '#C8CDE8' },
-  delta: { fontWeight: '700', marginTop: 4 },
-  cost: { marginTop: 24, padding: 16, backgroundColor: '#1A1D40', borderRadius: 12 },
-  body: { color: '#C8CDE8' },
+  body: { padding: 16 },
+  tiles: { flexDirection: 'row', gap: 12, marginVertical: 8 },
+  tile: { flex: 1 },
+  h2: { marginTop: 16, marginBottom: 8 },
+  mover: { marginBottom: 8 },
+  deltaChip: { marginRight: 12, alignSelf: 'center' },
+  costCard: { marginTop: 24 },
 });

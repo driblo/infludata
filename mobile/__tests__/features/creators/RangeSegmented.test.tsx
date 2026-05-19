@@ -1,11 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 
 import { RangeSegmented } from '@/features/creators/RangeSegmented';
+import { renderWithProviders } from '@/test/renderWithProviders';
 
 describe('RangeSegmented', () => {
   it('renders all four range buttons and reports selection', () => {
     const onChange = jest.fn();
-    render(<RangeSegmented value="30d" onChange={onChange} />);
+    renderWithProviders(<RangeSegmented value="30d" onChange={onChange} />);
 
     expect(screen.getByText('7d')).toBeTruthy();
     expect(screen.getByText('30d')).toBeTruthy();

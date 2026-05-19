@@ -1,16 +1,21 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
 
 export function ErrorState({ message }: { message: string }) {
+  const theme = useTheme();
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Something went wrong</Text>
-      <Text style={styles.body}>{message}</Text>
+      <Text variant="titleSmall" style={{ color: theme.colors.error }}>
+        Something went wrong
+      </Text>
+      <Text variant="bodyMedium" style={styles.body}>
+        {message}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { padding: 24, alignItems: 'center' },
-  title: { color: '#D62F4E', fontWeight: '700', marginBottom: 4 },
-  body: { color: '#C8CDE8', textAlign: 'center' },
+  body: { textAlign: 'center', marginTop: 4 },
 });

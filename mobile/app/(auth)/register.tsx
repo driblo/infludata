@@ -1,15 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { z } from 'zod';
 
 import { authApi } from '@/api/endpoints/auth';
 import { useAuthStore } from '@/auth/authStore';
 import { secureStore, TOKEN_KEY } from '@/storage/secureStore';
-import { Button } from '@/ui/Button';
 import { Screen } from '@/ui/Screen';
-import { TextField } from '@/ui/TextField';
 
 const schema = z.object({
   name: z.string().min(1, 'Name required'),
@@ -46,50 +45,72 @@ export default function RegisterScreen() {
   return (
     <Screen>
       <View style={styles.card}>
-        <Text style={styles.title}>Create account</Text>
+        <Text variant="headlineMedium" style={styles.title}>
+          Create account
+        </Text>
+
         <Controller
           control={control}
           name="name"
           render={({ field }) => (
-            <TextField
-              label="Name"
-              value={field.value}
-              onChangeText={field.onChange}
-              errorText={errors.name?.message}
-            />
+            <View>
+              <TextInput
+                label="Name"
+                mode="outlined"
+                value={field.value}
+                onChangeText={field.onChange}
+                error={!!errors.name}
+              />
+              {errors.name ? <HelperText type="error">{errors.name.message}</HelperText> : null}
+            </View>
           )}
         />
+
         <Controller
           control={control}
           name="email"
           render={({ field }) => (
-            <TextField
-              label="Email"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              value={field.value}
-              onChangeText={field.onChange}
-              errorText={errors.email?.message}
-            />
+            <View>
+              <TextInput
+                label="Email"
+                mode="outlined"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoComplete="email"
+                value={field.value}
+                onChangeText={field.onChange}
+                error={!!errors.email}
+              />
+              {errors.email ? <HelperText type="error">{errors.email.message}</HelperText> : null}
+            </View>
           )}
         />
+
         <Controller
           control={control}
           name="password"
           render={({ field }) => (
-            <TextField
-              label="Password"
-              secureTextEntry
-              autoComplete="password-new"
-              value={field.value}
-              onChangeText={field.onChange}
-              errorText={errors.password?.message}
-            />
+            <View>
+              <TextInput
+                label="Password"
+                mode="outlined"
+                secureTextEntry
+                autoComplete="password-new"
+                value={field.value}
+                onChangeText={field.onChange}
+                error={!!errors.password}
+              />
+              {errors.password ? <HelperText type="error">{errors.password.message}</HelperText> : null}
+            </View>
           )}
         />
-        <Button label="Create account" onPress={onSubmit} loading={isSubmitting} />
-        <Button label="Already have an account? Sign in" variant="outlined" onPress={() => router.push('/login')} />
+
+        <Button mode="contained" onPress={onSubmit} loading={isSubmitting} style={styles.btn}>
+          Create account
+        </Button>
+        <Button mode="text" onPress={() => router.push('/login')} disabled={isSubmitting}>
+          Already have an account? Sign in
+        </Button>
       </View>
     </Screen>
   );
@@ -97,5 +118,6 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   card: { maxWidth: 420, width: '100%', alignSelf: 'center', gap: 8, marginTop: 32 },
-  title: { color: '#fff', fontSize: 24, fontWeight: '700', marginBottom: 16 },
+  title: { marginBottom: 16 },
+  btn: { marginTop: 8 },
 });

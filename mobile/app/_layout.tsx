@@ -4,10 +4,12 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useAuthBootstrap } from '@/auth/useAuthBootstrap';
 import { initSentry } from '@/lib/sentry';
+import { paperTheme } from '@/lib/theme';
 
 export default function RootLayout() {
   useEffect(() => {
@@ -39,10 +41,12 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={client}>
-          <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false }} />
-        </QueryClientProvider>
+        <PaperProvider theme={paperTheme}>
+          <QueryClientProvider client={client}>
+            <StatusBar style="light" />
+            <Stack screenOptions={{ headerShown: false }} />
+          </QueryClientProvider>
+        </PaperProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

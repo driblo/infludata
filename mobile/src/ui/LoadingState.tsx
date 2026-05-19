@@ -1,9 +1,10 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
 
 export function LoadingState() {
   return (
     <View style={styles.wrap}>
-      <ActivityIndicator color="#7B61FF" />
+      <ActivityIndicator />
     </View>
   );
 }

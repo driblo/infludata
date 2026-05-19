@@ -1,15 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { z } from 'zod';
 
 import { authApi } from '@/api/endpoints/auth';
 import { useAuthStore } from '@/auth/authStore';
 import { secureStore, TOKEN_KEY } from '@/storage/secureStore';
-import { Button } from '@/ui/Button';
 import { Screen } from '@/ui/Screen';
-import { TextField } from '@/ui/TextField';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -46,38 +45,55 @@ export default function LoginScreen() {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={styles.card}>
-          <Text style={styles.title}>Sign in</Text>
+          <Text variant="headlineMedium" style={styles.title}>
+            Sign in
+          </Text>
+
           <Controller
             control={control}
             name="email"
             render={({ field }) => (
-              <TextField
-                label="Email"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                value={field.value}
-                onChangeText={field.onChange}
-                errorText={errors.email?.message}
-              />
+              <View>
+                <TextInput
+                  label="Email"
+                  mode="outlined"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  error={!!errors.email}
+                />
+                {errors.email ? <HelperText type="error">{errors.email.message}</HelperText> : null}
+              </View>
             )}
           />
+
           <Controller
             control={control}
             name="password"
             render={({ field }) => (
-              <TextField
-                label="Password"
-                secureTextEntry
-                autoComplete="password"
-                value={field.value}
-                onChangeText={field.onChange}
-                errorText={errors.password?.message}
-              />
+              <View>
+                <TextInput
+                  label="Password"
+                  mode="outlined"
+                  secureTextEntry
+                  autoComplete="password"
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  error={!!errors.password}
+                />
+                {errors.password ? <HelperText type="error">{errors.password.message}</HelperText> : null}
+              </View>
             )}
           />
-          <Button label="Sign in" onPress={onSubmit} loading={isSubmitting} />
-          <Button label="Create an account" variant="outlined" onPress={() => router.push('/register')} />
+
+          <Button mode="contained" onPress={onSubmit} loading={isSubmitting} style={styles.btn}>
+            Sign in
+          </Button>
+          <Button mode="text" onPress={() => router.push('/register')} disabled={isSubmitting}>
+            Create an account
+          </Button>
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -86,5 +102,6 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   card: { maxWidth: 420, width: '100%', alignSelf: 'center', gap: 8, marginTop: 32 },
-  title: { color: '#fff', fontSize: 24, fontWeight: '700', marginBottom: 16 },
+  title: { marginBottom: 16 },
+  btn: { marginTop: 8 },
 });

@@ -7,6 +7,10 @@ iOS, Android, and Web client for the infludata API. Single codebase via
 
 - **Expo SDK 52** (Managed) + **Expo Router** (file-based routing)
 - **TypeScript** strict
+- **react-native-paper** (Material Design 3) — full UI: `Appbar`, `Card`,
+  `Button`, `TextInput`, `Avatar`, `Dialog`, `FAB`, `Snackbar`, `ProgressBar`,
+  `Chip`, `SegmentedButtons`, `List.Item`, etc. Custom MD3 dark theme in
+  `src/lib/theme.ts`
 - **TanStack Query v5** + **axios** for server state
 - **Zustand** for the small auth store
 - **react-hook-form** + **zod**

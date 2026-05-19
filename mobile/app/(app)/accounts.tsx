@@ -1,20 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Appbar, Avatar, Button, Card, IconButton, List, Text, useTheme } from 'react-native-paper';
 
 import { connectionsApi } from '@/api/endpoints/connections';
 import { qk } from '@/api/queryKeys';
-import { usePhylloConnect } from '@/features/connections/usePhylloConnect';
 import { NETWORKS } from '@/api/types';
-import { Avatar } from '@/ui/Avatar';
-import { Button } from '@/ui/Button';
+import { usePhylloConnect } from '@/features/connections/usePhylloConnect';
 import { EmptyState } from '@/ui/EmptyState';
 import { ErrorState } from '@/ui/ErrorState';
 import { LoadingState } from '@/ui/LoadingState';
-import { Screen } from '@/ui/Screen';
 
 export default function AccountsScreen() {
   const qc = useQueryClient();
+  const router = useRouter();
+  const theme = useTheme();
   const [busyNetwork, setBusyNetwork] = useState<string | null>(null);
 
   const list = useQuery({ queryKey: qk.connections, queryFn: () => connectionsApi.list() });
@@ -37,68 +38,72 @@ export default function AccountsScreen() {
   };
 
   return (
-    <Screen>
-      <ScrollView>
-        <Text style={styles.h1}>Connected accounts</Text>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <Appbar.Header>
+        <Appbar.BackAction onPress={() => router.back()} />
+        <Appbar.Content title="Accounts" />
+      </Appbar.Header>
+
+      <ScrollView contentContainerStyle={styles.body}>
+        <Text variant="titleMedium" style={styles.h2}>
+          Connected accounts
+        </Text>
+
         {list.isLoading ? (
           <LoadingState />
         ) : list.isError ? (
           <ErrorState message={(list.error as Error).message} />
         ) : list.data && list.data.length > 0 ? (
           list.data.map((acc) => (
-            <View key={acc.id} style={styles.row}>
-              <Avatar fallback={acc.network} />
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.rowTitle}>{acc.external_handle ?? acc.network}</Text>
-                <Text style={styles.rowBody}>
-                  {acc.network} · {acc.status}
-                </Text>
-              </View>
-              <Pressable onPress={() => remove.mutate(acc.id)}>
-                <Text style={styles.removeLink}>Remove</Text>
-              </Pressable>
-            </View>
+            <Card key={acc.id} mode="contained" style={styles.card}>
+              <List.Item
+                title={acc.external_handle ?? acc.network}
+                description={`${acc.network} · ${acc.status}`}
+                left={() => <Avatar.Text size={40} label={acc.network.charAt(0).toUpperCase()} />}
+                right={() => (
+                  <IconButton
+                    icon="link-off"
+                    accessibilityLabel="Disconnect"
+                    onPress={() => remove.mutate(acc.id)}
+                  />
+                )}
+              />
+            </Card>
           ))
         ) : (
           <EmptyState title="No connected accounts yet." />
         )}
 
-        <Text style={[styles.h1, { marginTop: 24 }]}>Connect a new account</Text>
+        <Text variant="titleMedium" style={[styles.h2, { marginTop: 24 }]}>
+          Connect a new account
+        </Text>
+
         {NETWORKS.map((n) => (
-          <View key={n} style={styles.connectRow}>
-            <Avatar fallback={n} />
-            <Text style={styles.connectLabel}>{n}</Text>
-            <Button
-              label={busyNetwork === n ? 'Opening…' : 'Connect'}
-              variant="outlined"
-              onPress={() => onConnect(n)}
-              loading={busyNetwork === n}
+          <Card key={n} mode="contained" style={styles.card}>
+            <Card.Title
+              title={n.charAt(0).toUpperCase() + n.slice(1)}
+              left={() => <Avatar.Text size={40} label={n.charAt(0).toUpperCase()} />}
+              right={() => (
+                <Button
+                  mode="outlined"
+                  onPress={() => onConnect(n)}
+                  loading={busyNetwork === n}
+                  compact
+                  style={{ marginRight: 12 }}
+                >
+                  Connect
+                </Button>
+              )}
             />
-          </View>
+          </Card>
         ))}
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  h1: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1A1D40',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-  },
-  rowTitle: { color: '#fff', fontWeight: '600' },
-  rowBody: { color: '#C8CDE8', textTransform: 'capitalize' },
-  removeLink: { color: '#D62F4E', fontWeight: '600' },
-  connectRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 8,
-  },
-  connectLabel: { color: '#fff', textTransform: 'capitalize', flex: 1, marginLeft: 12 },
+  body: { padding: 16 },
+  h2: { marginBottom: 8 },
+  card: { marginBottom: 8 },
 });

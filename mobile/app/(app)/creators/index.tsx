@@ -1,32 +1,35 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
+  Appbar,
+  Avatar,
+  Button,
+  Card,
+  Chip,
+  Dialog,
+  FAB,
+  IconButton,
+  List,
+  Portal,
   Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+  TextInput,
+  useTheme,
+} from 'react-native-paper';
 
 import { creatorsApi } from '@/api/endpoints/creators';
 import { qk } from '@/api/queryKeys';
 import { NETWORKS, type Network } from '@/api/types';
 import { compactNumber } from '@/lib/format';
-import { Avatar } from '@/ui/Avatar';
-import { Button } from '@/ui/Button';
 import { EmptyState } from '@/ui/EmptyState';
 import { ErrorState } from '@/ui/ErrorState';
 import { LoadingState } from '@/ui/LoadingState';
-import { Screen } from '@/ui/Screen';
-import { TextField } from '@/ui/TextField';
 
 export default function CreatorsScreen() {
   const qc = useQueryClient();
   const router = useRouter();
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [network, setNetwork] = useState<Network>('youtube');
   const [handle, setHandle] = useState('');
@@ -50,13 +53,13 @@ export default function CreatorsScreen() {
   });
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.h1}>Tracked creators</Text>
-        <Button label="Add" onPress={() => setOpen(true)} />
-      </View>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <Appbar.Header>
+        <Appbar.BackAction onPress={() => router.back()} />
+        <Appbar.Content title="Tracked creators" />
+      </Appbar.Header>
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.body}>
         {list.isLoading ? (
           <LoadingState />
         ) : list.isError ? (
@@ -65,90 +68,83 @@ export default function CreatorsScreen() {
           list.data.map((t) => {
             const p = t.creator_profile;
             return (
-              <Pressable
-                key={t.id}
-                onPress={() => router.push(`/creators/${t.creator_profile_id}`)}
-                style={styles.row}
-              >
-                <Avatar uri={p?.avatar_url ?? null} fallback={t.network} />
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.title}>{p?.display_name ?? t.handle}</Text>
-                  <Text style={styles.body}>
-                    {t.network} · @{t.handle}
-                    {p ? ` · ${compactNumber(p.follower_count)} followers` : ''}
-                  </Text>
-                </View>
-                <Pressable onPress={() => untrack.mutate(t.id)}>
-                  <Text style={styles.removeLink}>Remove</Text>
-                </Pressable>
-              </Pressable>
+              <Card key={t.id} mode="contained" style={styles.card}>
+                <List.Item
+                  title={p?.display_name ?? t.handle}
+                  description={
+                    `${t.network} · @${t.handle}` +
+                    (p ? `  ·  ${compactNumber(p.follower_count)} followers` : '')
+                  }
+                  left={() =>
+                    p?.avatar_url ? (
+                      <Avatar.Image size={40} source={{ uri: p.avatar_url }} />
+                    ) : (
+                      <Avatar.Text size={40} label={t.network.charAt(0).toUpperCase()} />
+                    )
+                  }
+                  right={() => (
+                    <IconButton icon="delete-outline" onPress={() => untrack.mutate(t.id)} />
+                  )}
+                  onPress={() => router.push(`/creators/${t.creator_profile_id}`)}
+                />
+              </Card>
             );
           })
         ) : (
-          <EmptyState title="No tracked creators yet." hint="Tap Add to track your first creator." />
+          <EmptyState title="No tracked creators yet." hint="Tap + to track your first creator." />
         )}
       </ScrollView>
 
-      <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-        <View style={styles.backdrop}>
-          <View style={styles.sheet}>
-            <Text style={styles.h2}>Track a creator</Text>
+      <FAB icon="plus" label="Add" onPress={() => setOpen(true)} style={styles.fab} />
 
-            <Text style={styles.fieldLabel}>Network</Text>
+      <Portal>
+        <Dialog visible={open} onDismiss={() => setOpen(false)}>
+          <Dialog.Title>Track a creator</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="labelMedium" style={styles.fieldLabel}>
+              Network
+            </Text>
             <View style={styles.chips}>
               {NETWORKS.map((n) => (
-                <TouchableOpacity
-                  key={n}
-                  onPress={() => setNetwork(n)}
-                  style={[styles.chip, network === n && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, network === n && styles.chipTextActive]}>{n}</Text>
-                </TouchableOpacity>
+                <Chip key={n} selected={network === n} onPress={() => setNetwork(n)} style={styles.chip}>
+                  {n}
+                </Chip>
               ))}
             </View>
-
-            <TextField label="Handle (without @)" value={handle} onChangeText={setHandle} autoCapitalize="none" />
-            <TextField label="Label (optional)" value={label} onChangeText={setLabel} />
-
-            <View style={styles.modalActions}>
-              <Button label="Cancel" variant="outlined" onPress={() => setOpen(false)} />
-              <Button label="Track" onPress={() => create.mutate()} loading={create.isPending} />
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </Screen>
+            <TextInput
+              label="Handle (without @)"
+              mode="outlined"
+              value={handle}
+              onChangeText={setHandle}
+              autoCapitalize="none"
+              style={styles.input}
+            />
+            <TextInput
+              label="Label (optional)"
+              mode="outlined"
+              value={label}
+              onChangeText={setLabel}
+              style={styles.input}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setOpen(false)}>Cancel</Button>
+            <Button mode="contained" onPress={() => create.mutate()} loading={create.isPending}>
+              Track
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  h1: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  h2: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 12 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1A1D40',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-  },
-  title: { color: '#fff', fontWeight: '600' },
-  body: { color: '#C8CDE8' },
-  removeLink: { color: '#D62F4E', fontWeight: '600' },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#0F1226', padding: 24, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
-  fieldLabel: { color: '#C8CDE8', marginBottom: 6, fontWeight: '500' },
+  body: { padding: 16, paddingBottom: 96 },
+  card: { marginBottom: 8 },
+  fab: { position: 'absolute', right: 16, bottom: 16 },
+  fieldLabel: { marginBottom: 6, marginTop: 8, opacity: 0.7 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#2A2E55',
-  },
-  chipActive: { backgroundColor: '#7B61FF', borderColor: '#7B61FF' },
-  chipText: { color: '#C8CDE8', textTransform: 'capitalize' },
-  chipTextActive: { color: '#fff', fontWeight: '700' },
-  modalActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  chip: { marginRight: 4 },
+  input: { marginBottom: 8 },
 });
