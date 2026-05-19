@@ -75,12 +75,20 @@ docs/adr/       Architecture Decision Records
 See `/root/.claude/plans/create-a-plan-to-validated-avalanche.md` for the
 full plan. Milestone status:
 
-- [x] **M0** Scaffolding + DX (this commit)
-- [ ] **M1** Auth + Phyllo own-account for YouTube & Instagram
-- [ ] **M2** Public-creator lookup + ingestion (YT, IG)
-- [ ] **M3** TikTok, X, Facebook Pages
-- [ ] **M4** Flutter analytics UI
-- [ ] **M5** Alerts, exports, admin, beta
+- [x] **M0** Scaffolding + DX
+- [x] **M1** Auth + Phyllo own-account for YouTube & Instagram
+- [x] **M2** Public-creator lookup + ingestion (YT, IG)
+- [x] **M3** TikTok, X, Facebook Pages
+- [x] **M4** Flutter analytics UI (dashboard, content, charts)
+- [x] **M5** Alerts, exports, admin, GDPR — code-complete
+
+> **Operational follow-ups for beta launch** (not code work):
+>
+> - Provision real Phyllo sandbox + production credentials
+> - Submit Meta App Review for Instagram permissions (2–4 wk)
+> - Wire FCM/APNs and notification delivery
+> - Run k6 load tests (`scripts/k6/`) against staging
+> - TestFlight + Play internal track upload
 
 ## Useful commands
 

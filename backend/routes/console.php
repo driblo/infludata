@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Jobs\EvaluateAlertsJob;
 use App\Jobs\RefreshCreatorJob;
 use App\Models\TrackedCreator;
 use Illuminate\Foundation\Inspiring;
@@ -29,3 +30,5 @@ Schedule::call(function (): void {
             }
         }, 'creator_profile_id');
 })->dailyAt('04:00')->name('refresh-tracked-creators')->withoutOverlapping();
+
+Schedule::job(new EvaluateAlertsJob)->hourly()->name('evaluate-alerts')->withoutOverlapping();

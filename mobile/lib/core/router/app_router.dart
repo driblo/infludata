@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/alerts/alerts_screen.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/auth/auth_login_screen.dart';
 import '../../features/auth/auth_register_screen.dart';
@@ -10,6 +11,7 @@ import '../../features/creators/content_list_screen.dart';
 import '../../features/creators/creator_detail_screen.dart';
 import '../../features/creators/tracked_creators_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/settings/settings_screen.dart';
 import '../auth/auth_state.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -65,6 +67,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => ContentListScreen(
           creatorId: int.parse(state.pathParameters['id']!),
         ),
+      ),
+      GoRoute(
+        path: '/alerts',
+        name: 'alerts',
+        builder: (_, __) => const AlertsScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (_, __) => const SettingsScreen(),
       ),
     ],
   );

@@ -71,4 +71,17 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_if($user === null, 401);
+
+        // Tokens, oauth_accounts, tracked_creators, alerts, export_requests
+        // all cascade via FK; shared creator_profiles (no PII) are retained.
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json(status: 204);
+    }
 }
