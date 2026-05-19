@@ -18,6 +18,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   intl: ^0.19.0
   cupertino_icons: ^1.0.8
+  sentry_flutter: ^8.14.0
 
 dev_dependencies:
   flutter_test:

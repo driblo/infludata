@@ -6,6 +6,8 @@ namespace App\Jobs;
 
 use App\Models\Alert;
 use App\Models\MetricSnapshot;
+use App\Models\User;
+use App\Notifications\AlertFiredNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -92,9 +94,12 @@ class EvaluateAlertsJob implements ShouldQueue
     private function fire(Alert $alert): void
     {
         $alert->update(['last_fired_at' => now()]);
-        // Email + push delivery wiring lives in a follow-up patch; this job
-        // is intentionally side-effect light to keep the unit-test loop
-        // synchronous and fast.
+
+        $user = User::find($alert->user_id);
+        if ($user !== null) {
+            $user->notify(new AlertFiredNotification($alert));
+        }
+
         Log::info('alerts.fired', [
             'alert_id' => $alert->id,
             'kind' => $alert->kind,

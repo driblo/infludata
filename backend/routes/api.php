@@ -28,6 +28,7 @@ Route::post('/webhooks/phyllo', PhylloWebhookController::class)->name('api.webho
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/me', [AuthController::class, 'me'])->name('api.me');
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+    Route::post('/auth/refresh', [AuthController::class, 'refresh'])->name('api.auth.refresh');
 
     Route::get('/connections', [ConnectionsController::class, 'index'])->name('api.connections.index');
     Route::post('/connections/phyllo-token', [ConnectionsController::class, 'phylloToken'])->name('api.connections.phyllo-token');

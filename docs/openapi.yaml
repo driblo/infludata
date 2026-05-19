@@ -1,0 +1,276 @@
+openapi: 3.1.0
+info:
+  title: infludata API
+  version: 0.1.0
+  description: |
+    Social-stats analytics REST API. All `/api/*` routes return Problem+JSON
+    on error (`type, title, status, detail, trace_id`). Authentication is via
+    Sanctum personal access tokens passed as `Authorization: Bearer ...`.
+
+servers:
+  - url: http://localhost:8000
+    description: local dev
+  - url: https://staging.api.infludata
+    description: staging
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        trace_id: { type: string, nullable: true }
+    Token:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+        user:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            email: { type: string, format: email }
+    OauthAccount:
+      type: object
+      properties:
+        id: { type: integer }
+        network:
+          type: string
+          enum: [youtube, instagram, tiktok, x, facebook]
+        external_handle: { type: string, nullable: true }
+        status: { type: string }
+        connected_at: { type: string, format: date-time, nullable: true }
+        last_synced_at: { type: string, format: date-time, nullable: true }
+    CreatorProfile:
+      type: object
+      properties:
+        id: { type: integer }
+        network: { type: string }
+        handle: { type: string }
+        display_name: { type: string, nullable: true }
+        avatar_url: { type: string, nullable: true }
+        follower_count: { type: integer }
+        is_verified: { type: boolean }
+    MetricPoint:
+      type: object
+      properties:
+        captured_at: { type: string, format: date-time }
+        followers: { type: integer }
+        following: { type: integer }
+        total_likes: { type: integer }
+        total_views: { type: integer }
+        engagement_rate: { type: number, nullable: true }
+    Alert:
+      type: object
+      properties:
+        id: { type: integer }
+        target_type: { type: string, enum: [creator, own] }
+        target_id: { type: integer }
+        kind: { type: string, enum: [follower_milestone, engagement_drop, new_content] }
+        threshold: { type: object }
+        channel: { type: string, enum: [email, push] }
+        enabled: { type: boolean }
+
+paths:
+  /api/health:
+    get:
+      security: []
+      summary: Liveness + subsystem health
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok, degraded] }
+                  checks:
+                    type: object
+                    properties:
+                      app: { type: string }
+                      db: { type: string }
+                      redis: { type: string }
+                  version: { type: string }
+
+  /api/auth/register:
+    post:
+      security: []
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Token' }
+
+  /api/auth/login:
+    post:
+      security: []
+      summary: Issue a Sanctum token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                device_name: { type: string }
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Token' }
+
+  /api/auth/refresh:
+    post:
+      summary: Rotate the current token
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+
+  /api/auth/logout:
+    post:
+      summary: Revoke the current token
+      responses:
+        '204': { description: revoked }
+
+  /api/me:
+    get:
+      summary: Current user
+      responses:
+        '200': { description: ok }
+    delete:
+      summary: Permanently delete the authenticated account (GDPR)
+      responses:
+        '204': { description: deleted }
+
+  /api/connections:
+    get:
+      summary: List connected own-accounts
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/OauthAccount' }
+  /api/connections/phyllo-token:
+    post:
+      summary: Mint a short-lived Phyllo Connect SDK token
+      responses:
+        '200': { description: ok }
+
+  /api/creators:
+    get: { summary: List tracked creators, responses: { '200': { description: ok } } }
+    post:
+      summary: Track a creator by network + handle (rate-limited 5/min)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [network, handle]
+              properties:
+                network:
+                  type: string
+                  enum: [youtube, instagram, tiktok, x, facebook]
+                handle: { type: string }
+                label: { type: string }
+      responses:
+        '201': { description: tracked + backfill queued }
+        '422': { description: validation or NetworkDisabled }
+
+  /api/creators/{creator}/metrics:
+    get:
+      summary: Followers timeseries
+      parameters:
+        - in: path
+          name: creator
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: range
+          schema: { type: string, enum: [7d, 30d, 90d, 1y], default: 30d }
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MetricPoint' }
+
+  /api/dashboard:
+    get:
+      summary: Aggregate KPIs + top movers (7d)
+      responses: { '200': { description: ok } }
+
+  /api/alerts:
+    get: { summary: List alerts, responses: { '200': { description: ok } } }
+    post:
+      summary: Create an alert rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Alert' }
+      responses: { '201': { description: created } }
+
+  /api/exports:
+    post:
+      summary: Queue an export (csv | json | gdpr)
+      responses: { '202': { description: queued } }
+
+  /api/cost:
+    get:
+      summary: Today's X-API spend + remaining budget
+      responses: { '200': { description: ok } }
+
+  /api/webhooks/phyllo:
+    post:
+      security: []
+      summary: Phyllo inbound webhook (HMAC-SHA256 via Phyllo-Signature header)
+      responses:
+        '200': { description: ok }
+        '401': { description: signature invalid }

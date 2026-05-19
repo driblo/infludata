@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\CreatorProfileFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CreatorProfile extends Model
 {
+    /** @use HasFactory<CreatorProfileFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'network',
         'platform_user_id',

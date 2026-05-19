@@ -72,6 +72,26 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 
+    /**
+     * Issue a fresh PAT and revoke the current one. Stateless rotation:
+     * the client should swap the bearer header before its next call.
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        abort_if($user === null, 401);
+
+        $name = (string) ($request->input('device_name', 'api'));
+        $new = $user->createToken($name, ['*'], now()->addDays(30))->plainTextToken;
+
+        $current = $user->currentAccessToken();
+        if ($current instanceof PersonalAccessToken) {
+            $current->delete();
+        }
+
+        return response()->json(['token' => $new]);
+    }
+
     public function deleteAccount(Request $request): JsonResponse
     {
         $user = $request->user();

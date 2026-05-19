@@ -70,7 +70,7 @@ class PhylloWebhookController extends Controller
         match ($eventType) {
             'ACCOUNTS.CONNECTED' => $this->onAccountConnected($data),
             'ACCOUNTS.DISCONNECTED' => $this->onAccountDisconnected($data),
-            // PROFILES.UPDATED / CONTENTS.ADDED / AUDIENCE.UPDATED handled in later milestones.
+            'PROFILES.UPDATED', 'CONTENTS.ADDED', 'AUDIENCE.UPDATED' => $this->onAccountChanged($data),
             default => null,
         };
     }
@@ -115,6 +115,30 @@ class PhylloWebhookController extends Controller
         });
 
         BackfillOwnAccountJob::dispatch($accountId)->onQueue('high');
+    }
+
+    /**
+     * Re-dispatch a backfill for the affected account when Phyllo notifies
+     * us that the profile, content list, or audience has changed. The job
+     * is idempotent on the account id, so duplicate webhooks coalesce.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function onAccountChanged(array $data): void
+    {
+        $accountId = (string) ($data['account']['id'] ?? '');
+        if ($accountId === '') {
+            return;
+        }
+
+        $known = OauthAccount::where('phyllo_account_id', $accountId)->exists();
+        if (! $known) {
+            Log::info('phyllo.webhook.ignored', ['reason' => 'unknown account', 'id' => $accountId]);
+
+            return;
+        }
+
+        BackfillOwnAccountJob::dispatch($accountId)->onQueue('default');
     }
 
     /**
