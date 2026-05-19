@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_client.dart';
 import '../auth/auth_controller.dart';
+import '../cost/cost_controller.dart';
 
 final _healthProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final dio = ref.watch(apiClientProvider);
@@ -76,6 +77,35 @@ class DashboardScreen extends ConsumerWidget {
                 icon: const Icon(Icons.people_outline),
                 label: const Text('Tracked creators'),
                 onPressed: () => context.go('/creators'),
+              ),
+              const SizedBox(height: 24),
+              Consumer(
+                builder: (context, ref, _) {
+                  final cost = ref.watch(xCostProvider);
+                  return cost.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (c) => Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('X API spend today',
+                                style: Theme.of(context).textTheme.titleSmall),
+                            const SizedBox(height: 4),
+                            Text(
+                              c.killSwitch
+                                  ? 'kill switch active — X disabled'
+                                  : '\$${c.spentToday.toStringAsFixed(3)} spent · '
+                                      '\$${c.remainingToday.toStringAsFixed(3)} remaining',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
