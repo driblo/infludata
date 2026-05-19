@@ -6,6 +6,7 @@ namespace App\Services\Phyllo;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -155,9 +156,15 @@ class PhylloClient
             ->acceptJson()
             ->timeout(15)
             ->retry(3, 200, function (\Throwable $e): bool {
-                // Retry only on transient errors.
-                return $e instanceof ConnectionException
-                    || (method_exists($e, 'response') && (int) optional($e->response)->status() >= 500);
+                // Retry on connection errors or upstream 5xx.
+                if ($e instanceof ConnectionException) {
+                    return true;
+                }
+                if ($e instanceof RequestException) {
+                    return $e->response->status() >= 500;
+                }
+
+                return false;
             }, throw: false);
     }
 

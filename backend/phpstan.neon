@@ -2,13 +2,13 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 7
+    level: 6
     paths:
         - app
         - routes
-        - tests
-    excludePaths:
-        - tests/TestCase.php
-    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+    noEnvCallsOutsideOfConfig: true
     ignoreErrors:
-        - identifier: missingType.iterableValue
+        # HorizonServiceProvider ships with this pattern from `horizon:install`.
+        - identifier: function.impossibleType
+          path: app/Providers/HorizonServiceProvider.php

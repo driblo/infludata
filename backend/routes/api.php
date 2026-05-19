@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\ConnectionsController;
+use App\Http\Controllers\Api\CreatorsController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\Webhooks\PhylloWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -24,4 +25,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/connections', [ConnectionsController::class, 'index'])->name('api.connections.index');
     Route::post('/connections/phyllo-token', [ConnectionsController::class, 'phylloToken'])->name('api.connections.phyllo-token');
     Route::delete('/connections/{connection}', [ConnectionsController::class, 'destroy'])->name('api.connections.destroy');
+
+    Route::get('/creators', [CreatorsController::class, 'index'])->name('api.creators.index');
+    Route::post('/creators', [CreatorsController::class, 'store'])->middleware('throttle:write')->name('api.creators.store');
+    Route::delete('/creators/{creator}', [CreatorsController::class, 'destroy'])->name('api.creators.destroy');
+    Route::get('/creators/{creator}/profile', [CreatorsController::class, 'show'])->name('api.creators.show');
+    Route::get('/creators/{creator}/metrics', [CreatorsController::class, 'metrics'])->name('api.creators.metrics');
+    Route::get('/creators/{creator}/content', [CreatorsController::class, 'content'])->name('api.creators.content');
 });

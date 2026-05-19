@@ -6,6 +6,8 @@ import '../../features/auth/auth_controller.dart';
 import '../../features/auth/auth_login_screen.dart';
 import '../../features/auth/auth_register_screen.dart';
 import '../../features/connections/my_accounts_screen.dart';
+import '../../features/creators/creator_detail_screen.dart';
+import '../../features/creators/tracked_creators_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../auth/auth_state.dart';
 
@@ -43,6 +45,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/accounts',
         name: 'accounts',
         builder: (_, __) => const MyAccountsScreen(),
+      ),
+      GoRoute(
+        path: '/creators',
+        name: 'creators',
+        builder: (_, __) => const TrackedCreatorsScreen(),
+      ),
+      GoRoute(
+        path: '/creators/:id',
+        name: 'creator-detail',
+        builder: (_, state) => CreatorDetailScreen(
+          creatorId: int.parse(state.pathParameters['id']!),
+        ),
       ),
     ],
   );

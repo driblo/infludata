@@ -29,6 +29,11 @@ class DashboardScreen extends ConsumerWidget {
         title: const Text('infludata'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.people_outline),
+            tooltip: 'Tracked creators',
+            onPressed: () => context.go('/creators'),
+          ),
+          IconButton(
             icon: const Icon(Icons.link),
             tooltip: 'My accounts',
             onPressed: () => context.go('/accounts'),
@@ -65,6 +70,12 @@ class DashboardScreen extends ConsumerWidget {
                 icon: const Icon(Icons.link),
                 label: const Text('Manage connected accounts'),
                 onPressed: () => context.go('/accounts'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.people_outline),
+                label: const Text('Tracked creators'),
+                onPressed: () => context.go('/creators'),
               ),
             ],
           ),
